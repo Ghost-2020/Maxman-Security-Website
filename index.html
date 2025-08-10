@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maxman Security - Professional Security Guard Services</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { background: #f7fafd; color: #222; }
+        .glass-navbar {
+            background: rgba(0,31,63,0.7);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+        }
+        .navbar-brand, .nav-link, .footer { color: #fff !important; }
+        .sticky-top { position: sticky; top: 0; z-index: 1030; }
+        .hero-section {
+            background: linear-gradient(120deg, #001f3f 60%, #0074D9 100%);
+            color: #fff;
+            padding: 120px 0 80px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section .animated-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('img/hero-bg.jpg') center/cover no-repeat;
+            opacity: 0.15;
+            z-index: 0;
+            animation: bgMove 20s linear infinite alternate;
+        }
+        @keyframes bgMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        .hero-content { position: relative; z-index: 1; }
+        .hero-title { font-size: 3rem; font-weight: 800; letter-spacing: 2px; }
+        .hero-subtitle { font-size: 1.5rem; margin-bottom: 2rem; }
+        .trust-badges { margin: 30px 0 0 0; display: flex; justify-content: center; gap: 30px; }
+        .trust-badge { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 10px 24px; display: flex; align-items: center; gap: 10px; font-weight: 600; color: #001f3f; }
+        .floating-alert-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 2000;
+            background: linear-gradient(120deg, #ff4136 60%, #ff851b 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            box-shadow: 0 4px 24px rgba(255,65,54,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .floating-alert-btn:hover { background: linear-gradient(120deg, #ff851b 60%, #ff4136 100%); }
+        .service-card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            transition: transform 0.25s, box-shadow 0.25s;
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+            min-height: 320px;
+        }
+        .service-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(0,116,217,0.12);
+        }
+        .service-card .icon {
+            font-size: 2.5rem;
+            color: #0074D9;
+            margin-bottom: 12px;
+        }
+        .footer { background: #001f3f; padding: 20px 0; text-align: center; margin-top: 40px; }
+        .btn-primary { background: #0074D9; border: none; }
+        .btn-primary:hover { background: #005fa3; }
+        .section-title { color: #001f3f; margin-bottom: 30px; font-weight: 700; }
+        .testimonials {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+            padding: 40px 20px;
+            margin: 40px 0;
+        }
+        .testimonial {
+            font-style: italic;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .testimonial-author {
+            font-weight: 600;
+            color: #0074D9;
+        }
+        .faq-section {
+            margin: 40px 0;
+        }
+        .faq-question {
+            font-weight: 600;
+            color: #001f3f;
+        }
+        .progress { height: 6px; margin-bottom: 16px; }
+        .tooltip-inner { background: #001f3f; color: #fff; }
+        @media (max-width: 767px) {
+            .hero-title { font-size: 2rem; }
+            .hero-section { padding: 60px 0 40px 0; }
+            .trust-badges { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Security Alert Button -->
+    <button class="floating-alert-btn" id="openAlertModal" aria-label="Send Security Alert" title="Send Security Alert">
+        <span class="bi bi-exclamation-triangle-fill"></span>
+    </button>
+    <!-- Security Alert Modal -->
+    <div class="modal fade" id="securityAlertModal" tabindex="-1" aria-labelledby="securityAlertModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="securityAlertForm" method="POST" action="php/receive_alert.php" novalidate aria-label="Security Alert Form">
+            <div class="modal-header">
+              <h5 class="modal-title" id="securityAlertModalLabel">Send Security Alert</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div id="alert-form-messages"></div>
+              <div class="mb-3">
+                <label for="alertName" class="form-label">Your Name (optional)</label>
+                <input type="text" class="form-control" id="alertName" name="alertName">
+              </div>
+              <div class="mb-3">
+                <label for="alertPhone" class="form-label">Phone Number (optional)</label>
+                <input type="tel" class="form-control" id="alertPhone" name="alertPhone">
+              </div>
+              <div class="mb-3">
+                <label for="alertMessage" class="form-label">Describe Your Emergency <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="alertMessage" name="alertMessage" rows="3" required aria-required="true"></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Share Location?</label>
+                <div>
+                  <button type="button" class="btn btn-outline-primary btn-sm" id="getLocationBtn">Share My Location</button>
+                  <input type="hidden" id="alertLocation" name="alertLocation">
+                  <span id="locationStatus" class="ms-2 small"></span>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-danger">Send Alert</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="loginForm" method="POST" action="php/login.php" novalidate aria-label="Staff Login Form">
+            <div class="modal-header">
+              <h5 class="modal-title" id="loginModalLabel">Staff Login</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div id="login-messages"></div>
+              <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" required>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg glass-navbar sticky-top" aria-label="Main Navigation">
+        <div class="container">
+            <img src="LOGO.png" alt="MAXMAN SECURITY">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonials">Testimonials</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal" id="loginNav">Login</a></li>
+                    <li class="nav-item d-none" id="dashboardNav"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link btn btn-primary text-white ms-2" href="#" data-bs-toggle="modal" data-bs-target="#requestServiceModal">Request a Service</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="animated-bg"></div>
+        <div class="container hero-content">
+            <h1 class="hero-title">Your Safety, Our Priority</h1>
+            <p class="hero-subtitle">Modern, responsive, and always ready to protect you, your family, and your business.</p>
+            <a href="#" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#requestServiceModal">Request a Service</a>
+            <div class="trust-badges mt-4">
+                <div class="trust-badge"><span class="bi bi-shield-lock"></span> Trusted by 500+ Clients</div>
+                <div class="trust-badge"><span class="bi bi-award"></span> Certified Guards</div>
+                <div class="trust-badge"><span class="bi bi-star-fill"></span> 24/7 Response</div>
+            </div>
+        </div>
+    </section>
+    <!-- Services Section -->
+    <section id="services" class="py-5">
+        <div class="container">
+            <h2 class="section-title text-center">Our Services</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card service-card h-100 text-center p-4">
+                        <div class="icon"><span class="bi bi-house-door"></span></div>
+                        <h5>Home Security</h5>
+                        <p>Comprehensive protection for your residence, 24/7 monitoring, and rapid response.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100 text-center p-4">
+                        <div class="icon"><span class="bi bi-building"></span></div>
+                        <h5>Office Security</h5>
+                        <p>Secure your business premises with our professional office security solutions.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100 text-center p-4">
+                        <div class="icon"><span class="bi bi-person-badge"></span></div>
+                        <h5>Bodyguard Services</h5>
+                        <p>Personal protection for VIPs, executives, and individuals requiring close security.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100 text-center p-4">
+                        <div class="icon"><span class="bi bi-people"></span></div>
+                        <h5>Event Security</h5>
+                        <p>Ensure the safety of your events with our experienced event security personnel.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100 text-center p-4">
+                        <div class="icon"><span class="bi bi-shield-check"></span></div>
+                        <h5>Escort Security</h5>
+                        <p>Safe and secure escort services for individuals and valuables.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card service-card h-100 text-center p-4">
+                        <div class="icon"><span class="bi bi-person-lock"></span></div>
+                        <h5>VIP Protection</h5>
+                        <p>Discreet and reliable protection for high-profile clients and VIPs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <h2 class="section-title text-center">What Our Clients Say</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="testimonial">“Maxman Security responded to my emergency in minutes. I felt safe and supported throughout!”<br><span class="testimonial-author">— Jane D.</span></div>
+                    <div class="testimonial">“Professional, reliable, and always on time. Highly recommended for any business.”<br><span class="testimonial-author">— Michael B.</span></div>
+                    <div class="testimonial">“The alert feature is a lifesaver. Thank you for keeping my family safe!”<br><span class="testimonial-author">— Sarah K.</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- FAQ Section -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <h2 class="section-title text-center">Frequently Asked Questions</h2>
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq1-heading">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
+                            How quickly can you respond to an emergency?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" aria-labelledby="faq1-heading" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">We offer 24/7 rapid response. Our team is dispatched within minutes of receiving an alert or request.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq2-heading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                            Are your guards certified and trained?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" aria-labelledby="faq2-heading" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">Yes, all our guards are fully certified, background-checked, and undergo regular training.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq3-heading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                            Can I request a specific type of security service?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" aria-labelledby="faq3-heading" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">Absolutely! Use our request form to specify your needs, and we'll tailor our services for you.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- About Us Section -->
+    <section id="about" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="section-title text-center">About Us</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-8 text-center">
+                    <p>Maxman Security is a leading provider of professional security guard services. With years of experience, our team is dedicated to ensuring the safety and security of our clients. We pride ourselves on our integrity, reliability, and commitment to excellence.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Contact Section -->
+    <section id="contact" class="py-5">
+        <div class="container">
+            <h2 class="section-title text-center">Contact Us</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card p-4">
+                        <h5>Contact Information</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li><strong>Email:</strong> info@maxmansecurity.com</li>
+                            <li><strong>Phone:</strong> +1 234 567 8900</li>
+                            <li><strong>Address:</strong> 123 Security Lane, City, Country</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <span>&copy; 2024 Maxman Security. All rights reserved.</span>
+            <form id="newsletterForm" class="d-inline-block ms-3" method="POST" action="php/newsletter_subscribe.php">
+                <input type="email" name="email" class="form-control d-inline-block w-auto" placeholder="Subscribe to newsletter" required style="display:inline-block; width:220px;">
+                <button type="submit" class="btn btn-primary btn-sm">Subscribe</button>
+                <span id="newsletterMsg" class="ms-2"></span>
+            </form>
+        </div>
+    </footer>
+    <!-- Request Service Modal -->
+    <div class="modal fade" id="requestServiceModal" tabindex="-1" aria-labelledby="requestServiceModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="serviceRequestForm" method="POST" action="php/request_service.php" novalidate aria-label="Service Request Form">
+            <div class="modal-header">
+              <h5 class="modal-title" id="requestServiceModalLabel">Request a Service</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="progress" id="formProgressBar" style="display:none;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+              </div>
+              <div id="form-messages"></div>
+              <div class="mb-3">
+                <label for="fullName" class="form-label">Full Name <span data-bs-toggle="tooltip" title="Enter your legal name."><i class="bi bi-info-circle"></i></span></label>
+                <input type="text" class="form-control" id="fullName" name="fullName" required aria-required="true">
+              </div>
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address <span data-bs-toggle="tooltip" title="We'll never share your email."><i class="bi bi-info-circle"></i></span></label>
+                <input type="email" class="form-control" id="email" name="email" required aria-required="true">
+              </div>
+              <div class="mb-3">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phone" name="phone" required aria-required="true">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Type of Service</label>
+                <select class="form-select" id="serviceType" name="serviceType" required aria-required="true">
+                  <option value="">Select a service</option>
+                  <option>Home Security</option>
+                  <option>Office Security</option>
+                  <option>Bodyguard</option>
+                  <option>Escort Security</option>
+                  <option>Event Security</option>
+                  <option>Residential Patrol</option>
+                  <option>Commercial Surveillance</option>
+                  <option>VIP Protection</option>
+                  <option>Other</option>
+                </select>
+                <input type="text" class="form-control mt-2 d-none" id="otherService" name="otherService" placeholder="Please specify" />
+              </div>
+              <div class="mb-3">
+                <label for="numGuards" class="form-label">Number of Security Guards Needed</label>
+                <input type="number" class="form-control" id="numGuards" name="numGuards" min="1" required aria-required="true">
+              </div>
+              <div class="mb-3">
+                <label for="serviceDate" class="form-label">Preferred Date/Time of Service (Optional)</label>
+                <input type="datetime-local" class="form-control" id="serviceDate" name="serviceDate">
+              </div>
+              <div class="mb-3">
+                <label for="message" class="form-label">Brief Message/Specific Request</label>
+                <textarea class="form-control" id="message" name="message" rows="3" required aria-required="true"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="submit" class="btn btn-primary">Submit Request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- Scripts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 

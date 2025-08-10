@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - Maxman Security</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        .dashboard-header { background: #001f3f; color: #fff; padding: 24px 0; text-align: center; }
+        .dashboard-section { margin: 32px 0; }
+        .table-responsive { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); padding: 20px; }
+        .logout-btn { position: absolute; top: 24px; right: 32px; }
+        #popupNotification { position: fixed; top: 20px; right: 20px; z-index: 3000; display: none; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header position-relative">
+        <h1>Staff Dashboard</h1>
+        <button class="btn btn-danger logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </div>
+    <div class="container">
+        <div id="popupNotification" class="alert alert-info"></div>
+        <div class="dashboard-section">
+            <h3>Service Requests</h3>
+            <div class="table-responsive">
+                <table class="table table-striped" id="serviceRequestsTable">
+                    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Service</th><th>Guards</th><th>Date/Time</th><th>Message</th><th>Requested At</th></tr></thead>
+                    <tbody><!-- AJAX data --></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="dashboard-section">
+            <h3>Emergency Alerts</h3>
+            <div class="table-responsive">
+                <table class="table table-striped" id="emergencyAlertsTable">
+                    <thead><tr><th>Name</th><th>Phone</th><th>Message</th><th>Location</th><th>Alert Time</th></tr></thead>
+                    <tbody><!-- AJAX data --></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="dashboard-section">
+            <h3>Newsletter Subscribers</h3>
+            <div class="table-responsive">
+                <table class="table table-striped" id="newsletterTable">
+                    <thead><tr><th>Email</th><th>Subscribed At</th></tr></thead>
+                    <tbody><!-- AJAX data --></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script>
+    // Simulate login check (replace with real session check in production)
+    if (!localStorage.getItem('staffLoggedIn')) {
+        window.location.href = 'index.html';
+    }
+    // Logout
+    $('#logoutBtn').on('click', function() {
+        localStorage.removeItem('staffLoggedIn');
+        window.location.href = 'index.html';
+    });
+    // Fetch data (AJAX to PHP endpoints, to be implemented)
+    function fetchDashboardData() {
+        // Service Requests
+        $.get('php/fetch_service_requests.php', function(data) {
+            var rows = '';
+            data.forEach(function(r) {
+                rows += `<tr><td>${r.full_name}</td><td>${r.email}</td><td>${r.phone}</td><td>${r.service_type}</td><td>${r.num_guards}</td><td>${r.service_date||''}</td><td>${r.message}</td><td>${r.requested_at}</td></tr>`;
+            });
+            $('#serviceRequestsTable tbody').html(rows);
+        });
+        // Emergency Alerts
+        $.get('php/fetch_emergency_alerts.php', function(data) {
+            var rows = '';
+            data.forEach(function(a) {
+                rows += `<tr><td>${a.name||''}</td><td>${a.phone||''}</td><td>${a.message}</td><td>${a.location||''}</td><td>${a.alert_time}</td></tr>`;
+            });
+            $('#emergencyAlertsTable tbody').html(rows);
+        });
+        // Newsletter Subscribers
+        $.get('php/fetch_newsletter.php', function(data) {
+            var rows = '';
+            data.forEach(function(n) {
+                rows += `<tr><td>${n.email}</td><td>${n.subscribed_at}</td></tr>`;
+            });
+            $('#newsletterTable tbody').html(rows);
+        });
+    }
+    fetchDashboardData();
+    // Simulate pop-up notification for new alerts/requests (replace with real-time in production)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'newAlert' && e.newValue === '1') {
+            showPopup('New emergency alert received!');
+            localStorage.setItem('newAlert', '0');
+        }
+        if (e.key === 'newRequest' && e.newValue === '1') {
+            showPopup('New service request received!');
+            localStorage.setItem('newRequest', '0');
+        }
+    });
+    function showPopup(msg) {
+        $('#popupNotification').text(msg).fadeIn();
+        setTimeout(function() { $('#popupNotification').fadeOut(); }, 4000);
+    }
+    </script>
+</body>
+</html> 
