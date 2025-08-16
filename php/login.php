@@ -1,38 +1,67 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+
+// Database configuration
 $host = 'localhost';
-$db   = 'security_company_db';
-$user = 'root';
-$pass = '';
-function clean_input($data) { return htmlspecialchars(strip_tags(trim($data))); }
-$username = clean_input($_POST['username'] ?? '');
-$password = $_POST['password'] ?? '';
-if (!$username || !$password) {
-    echo json_encode(['success' => false, 'message' => 'Username and password required.']);
+$dbname = 'security_company_db';
+$username = 'root';
+$password = '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
     exit;
 }
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Database connection failed.']);
-    exit;
-}
-$stmt = $conn->prepare("SELECT id, password FROM staff_users WHERE username = ?");
-$stmt->bind_param('s', $username);
-$stmt->execute();
-$stmt->store_result();
-if ($stmt->num_rows === 1) {
-    $stmt->bind_result($id, $hash);
-    $stmt->fetch();
-    if (password_verify($password, $hash)) {
-        $_SESSION['staff_id'] = $id;
-        $_SESSION['staff_username'] = $username;
-        echo json_encode(['success' => true, 'message' => 'Login successful.']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Invalid credentials.']);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
+    
+    if (empty($username) || empty($password)) {
+        echo json_encode(['success' => false, 'message' => 'Username and password are required']);
+        exit;
+    }
+    
+    try {
+        // Check if user exists and is active
+        $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role FROM staff_users WHERE (username = ? OR email = ?) AND is_active = 1");
+        $stmt->execute([$username, $username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user && password_verify($password, $user['password'])) {
+            // Update last login time
+            $updateStmt = $pdo->prepare("UPDATE staff_users SET last_login = CURRENT_TIMESTAMP WHERE id = ?");
+            $updateStmt->execute([$user['id']]);
+            
+            // Set session variables
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['logged_in'] = true;
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Login successful',
+                'user' => [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'full_name' => $user['full_name'],
+                    'role' => $user['role']
+                ]
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid username or password']);
+        }
+    } catch(PDOException $e) {
+        echo json_encode(['success' => false, 'message' => 'Database error occurred']);
     }
 } else {
-    echo json_encode(['success' => false, 'message' => 'Invalid credentials.']);
+    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
 }
-$stmt->close();
-$conn->close(); 
+?> 
