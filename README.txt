@@ -8,9 +8,10 @@ Maxman Security Website - Setup Instructions
 
 2. Project Structure
 --------------------
-- index.html         (Main homepage)
+- index.php          (Main homepage)
+- admin-dashboard.php (Admin dashboard - requires login)
 - css/               (CSS files: Bootstrap, custom styles)
-- js/                (JavaScript: Bootstrap, jQuery, plugins, main.js)
+- js/                (JavaScript: Bootstrap, jQuery, main.js)
 - img/               (Images/icons for services, hero background)
 - php/               (PHP backend scripts)
 
@@ -23,7 +24,7 @@ Maxman Security Website - Setup Instructions
   2. Or, copy the contents of 'php/db_setup.sql' and run it in a SQL query window.
 
 - By default, the database is named 'security_company_db'.
-- The PHP script assumes MySQL user 'root' with no password. Change these in 'php/request_service.php' if needed.
+- The PHP script assumes MySQL user 'root' with no password. Change these in 'php/includes/dbh.inc.php' if needed.
 
 4. PHP Backend Setup
 --------------------
@@ -39,8 +40,8 @@ Maxman Security Website - Setup Instructions
 
 6. Customization
 ----------------
-- Update company info in index.html (Contact section).
-- Add your own images/icons to the 'img/' folder and update the <img> tags in index.html.
+- Update company info in index.php (Contact section).
+- Add your own images/icons to the 'img/' folder and update the <img> tags in index.php.
 - Adjust color scheme in 'css/style.css' as needed.
 
 7. Security Notes

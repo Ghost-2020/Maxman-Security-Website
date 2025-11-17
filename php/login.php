@@ -2,33 +2,22 @@
 session_start();
 header('Content-Type: application/json');
 
-// Database configuration
-$host = 'localhost';
-$dbname = 'security_company_db';
-$username = 'root';
-$password = '';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-    exit;
-}
+// Include database connection
+require_once __DIR__ . '/includes/dbh.inc.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
+    $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
     
-    if (empty($username) || empty($password)) {
-        echo json_encode(['success' => false, 'message' => 'Username and password are required']);
+    if (empty($email) || empty($password)) {
+        echo json_encode(['success' => false, 'message' => 'Email and password are required']);
         exit;
     }
     
     try {
-        // Check if user exists and is active
-        $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role FROM staff_users WHERE (username = ? OR email = ?) AND is_active = 1");
-        $stmt->execute([$username, $username]);
+        // Check if user exists, is active, and is an admin
+        $stmt = $pdo->prepare("SELECT id, username, email, password, full_name, role FROM staff_users WHERE email = ? AND is_active = 1 AND role = 'admin'");
+        $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($user && password_verify($password, $user['password'])) {
@@ -56,9 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]
             ]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid username or password']);
+            echo json_encode(['success' => false, 'message' => 'Invalid email or password. Only admins can access the dashboard.']);
         }
     } catch(PDOException $e) {
+        error_log("Login error: " . $e->getMessage());
         echo json_encode(['success' => false, 'message' => 'Database error occurred']);
     }
 } else {

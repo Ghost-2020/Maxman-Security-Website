@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initScrollEffects();
     initModals();
     initTooltips();
-    initEmergencyButton();
-    
-    console.log('Maxman Security Website Loaded Successfully');
 });
 
 // Particle Background Animation
@@ -46,94 +43,6 @@ function createParticle(container) {
     container.appendChild(particle);
 }
 
-// Automatic Emergency Button
-function initEmergencyButton() {
-    const emergencyBtn = document.getElementById('openAlertModal');
-    
-    if (emergencyBtn) {
-        emergencyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Show loading state
-            this.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-            this.disabled = true;
-            
-            // Get user's location automatically
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        // Auto-send emergency alert
-                        sendEmergencyAlert(position);
-                    },
-                    function(error) {
-                        // If location fails, still send alert without location
-                        sendEmergencyAlert(null);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 60000
-                    }
-                );
-            } else {
-                // Geolocation not supported, send alert without location
-                sendEmergencyAlert(null);
-            }
-        });
-    }
-}
-
-// Send Emergency Alert Function
-async function sendEmergencyAlert(position) {
-    const emergencyBtn = document.getElementById('openAlertModal');
-    
-    try {
-        // Prepare alert data
-        const alertData = new FormData();
-        alertData.append('alertMessage', 'EMERGENCY ALERT: User has pressed the emergency button and requires immediate assistance.');
-        alertData.append('alertName', 'Emergency User');
-        alertData.append('alertPhone', 'Not provided');
-        
-        if (position) {
-            const coords = `${position.coords.latitude},${position.coords.longitude}`;
-            alertData.append('alertLocation', coords);
-        }
-        
-        // Send the alert
-        const response = await fetch('php/receive_alert.php', {
-            method: 'POST',
-            body: alertData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Show success notification
-            showNotification('Emergency alert sent successfully! Help is on the way.', 'success');
-            
-            // Reset button
-            emergencyBtn.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
-            emergencyBtn.disabled = false;
-            
-            // Add success animation
-            emergencyBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
-            setTimeout(() => {
-                emergencyBtn.style.background = 'var(--gradient-danger)';
-            }, 2000);
-            
-        } else {
-            throw new Error(result.message || 'Failed to send alert');
-        }
-        
-    } catch (error) {
-        console.error('Emergency alert error:', error);
-        showNotification('Failed to send emergency alert. Please try again or call emergency services directly.', 'error');
-        
-        // Reset button
-        emergencyBtn.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
-        emergencyBtn.disabled = false;
-    }
-}
 
 // Show Notification Function
 function showNotification(message, type = 'info') {
@@ -188,13 +97,29 @@ function initScrollEffects() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
+                entry.target.classList.add('animate');
+                // Add staggered animation delay for multiple elements
+                const siblings = Array.from(entry.target.parentElement.children);
+                const index = siblings.indexOf(entry.target);
+                entry.target.style.animationDelay = `${index * 0.1}s`;
             }
         });
     }, observerOptions);
     
-    // All elements excluded from scroll animations for completely static positioning
-    // No elements will move during scroll
+    // Observe elements with scroll-animate class
+    document.querySelectorAll('.scroll-animate').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Add navbar scroll effect
+    window.addEventListener('scroll', () => {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
 }
 
 // Smooth scrolling for navigation links
@@ -219,12 +144,6 @@ function initFormHandlers() {
     const serviceForm = document.getElementById('serviceRequestForm');
     if (serviceForm) {
         serviceForm.addEventListener('submit', handleServiceRequest);
-    }
-    
-    // Security Alert Form (manual form)
-    const alertForm = document.getElementById('securityAlertForm');
-    if (alertForm) {
-        alertForm.addEventListener('submit', handleSecurityAlert);
     }
     
     // Login Form
@@ -263,6 +182,12 @@ async function handleServiceRequest(e) {
     const form = e.target;
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
+    const messagesDiv = document.getElementById('form-messages');
+    
+    // Clear previous messages
+    if (messagesDiv) {
+        messagesDiv.innerHTML = '';
+    }
     
     // Show loading state
     submitBtn.innerHTML = '<span class="loading"></span> Processing...';
@@ -280,55 +205,34 @@ async function handleServiceRequest(e) {
         if (result.success) {
             showNotification('Service request submitted successfully! We\'ll contact you soon.', 'success');
             form.reset();
+            // Reset otherService field visibility
+            const otherServiceInput = document.getElementById('otherService');
+            if (otherServiceInput) {
+                otherServiceInput.classList.add('d-none');
+                otherServiceInput.required = false;
+            }
             bootstrap.Modal.getInstance(document.getElementById('requestServiceModal')).hide();
         } else {
-            showNotification(result.message || 'An error occurred. Please try again.', 'error');
+            const errorMessage = result.message || 'An error occurred. Please try again.';
+            showNotification(errorMessage, 'error');
+            // Also display in form messages div
+            if (messagesDiv) {
+                messagesDiv.innerHTML = `<div class="alert alert-danger" role="alert">${errorMessage}</div>`;
+            }
         }
     } catch (error) {
-        console.error('Error:', error);
-        showNotification('Network error. Please check your connection and try again.', 'error');
+        // Silent error handling - show user-friendly message
+        const errorMessage = 'Network error. Please check your connection and try again.';
+        showNotification(errorMessage, 'error');
+        if (messagesDiv) {
+            messagesDiv.innerHTML = `<div class="alert alert-danger" role="alert">${errorMessage}</div>`;
+        }
     } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
 }
 
-// Handle Security Alert (manual form)
-async function handleSecurityAlert(e) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    // Show loading state
-    submitBtn.innerHTML = '<span class="loading"></span> Sending Alert...';
-    submitBtn.disabled = true;
-    
-    try {
-        const formData = new FormData(form);
-        const response = await fetch(form.action, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showNotification('Emergency alert sent successfully! Help is on the way.', 'success');
-            form.reset();
-            bootstrap.Modal.getInstance(document.getElementById('securityAlertModal')).hide();
-        } else {
-            showNotification(result.message || 'Failed to send alert. Please try again.', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showNotification('Network error. Please try again or call emergency services directly.', 'error');
-    } finally {
-        submitBtn.innerHTML = originalText;
-        submitBtn.disabled = false;
-    }
-}
 
 // Handle Login
 async function handleLogin(e) {
@@ -352,15 +256,21 @@ async function handleLogin(e) {
         const result = await response.json();
         
         if (result.success) {
-            showNotification('Login successful! Redirecting...', 'success');
+            showNotification('Login successful! Redirecting to dashboard...', 'success');
+            // Show dashboard nav link
+            const dashboardNav = document.getElementById('dashboardNav');
+            const loginNav = document.getElementById('loginNav');
+            if (dashboardNav) dashboardNav.classList.remove('d-none');
+            if (loginNav) loginNav.style.display = 'none';
+            
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'admin-dashboard.php';
             }, 1000);
         } else {
             showNotification(result.message || 'Invalid credentials. Please try again.', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
+        // Silent error handling - show user-friendly message
         showNotification('Network error. Please try again.', 'error');
     } finally {
         submitBtn.innerHTML = originalText;
@@ -396,7 +306,7 @@ async function handleNewsletter(e) {
             showNotification(result.message || 'Subscription failed.', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
+        // Silent error handling - show user-friendly message
         showNotification('Network error. Please try again.', 'error');
     } finally {
         submitBtn.innerHTML = originalText;
@@ -411,43 +321,6 @@ function initModals() {
     modals.forEach(modal => {
         new bootstrap.Modal(modal);
     });
-    
-    // Initialize location sharing for manual form
-    initLocationSharing();
-}
-
-// Location sharing functionality (for manual form)
-function initLocationSharing() {
-    const getLocationBtn = document.getElementById('getLocationBtn');
-    const locationInput = document.getElementById('alertLocation');
-    const locationStatus = document.getElementById('locationStatus');
-    
-    if (getLocationBtn) {
-        getLocationBtn.addEventListener('click', function() {
-            if (navigator.geolocation) {
-                this.innerHTML = '<span class="loading"></span> Getting location...';
-                this.disabled = true;
-                
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const coords = `${position.coords.latitude},${position.coords.longitude}`;
-                        locationInput.value = coords;
-                        locationStatus.innerHTML = '<span class="text-success">Location shared successfully!</span>';
-                        getLocationBtn.innerHTML = 'Location Shared';
-                        getLocationBtn.classList.remove('btn-outline-primary');
-                        getLocationBtn.classList.add('btn-success');
-                    },
-                    function(error) {
-                        locationStatus.innerHTML = '<span class="text-danger">Unable to get location. Please enter manually.</span>';
-                        getLocationBtn.innerHTML = 'Try Again';
-                        getLocationBtn.disabled = false;
-                    }
-                );
-            } else {
-                locationStatus.innerHTML = '<span class="text-warning">Geolocation not supported by this browser.</span>';
-            }
-        });
-    }
 }
 
 // Initialize tooltips
@@ -597,4 +470,341 @@ rippleStyle.textContent = `
         overflow: hidden;
     }
 `;
-document.head.appendChild(rippleStyle); 
+document.head.appendChild(rippleStyle);
+
+// ===== MOBILE OPTIMIZATION & TOUCH INTERACTIONS =====
+
+// Mobile Floating Action Menu
+function initMobileFabMenu() {
+    const fabMain = document.getElementById('fabMain');
+    const fabMenuItems = document.getElementById('fabMenuItems');
+    const fabService = document.getElementById('fabService');
+    const fabContact = document.getElementById('fabContact');
+    
+    if (!fabMain) return;
+    
+    // Toggle FAB menu
+    fabMain.addEventListener('click', function() {
+        fabMenuItems.classList.toggle('show');
+        this.querySelector('i').classList.toggle('bi-plus');
+        this.querySelector('i').classList.toggle('bi-x');
+    });
+    
+    // FAB menu actions
+    if (fabService) {
+        fabService.addEventListener('click', function() {
+            // Open service request modal
+            const serviceModal = new bootstrap.Modal(document.getElementById('requestServiceModal'));
+            serviceModal.show();
+            fabMenuItems.classList.remove('show');
+            fabMain.querySelector('i').classList.add('bi-plus');
+            fabMain.querySelector('i').classList.remove('bi-x');
+        });
+    }
+    
+    if (fabContact) {
+        fabContact.addEventListener('click', function() {
+            // Scroll to contact section
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            fabMenuItems.classList.remove('show');
+            fabMain.querySelector('i').classList.add('bi-plus');
+            fabMain.querySelector('i').classList.remove('bi-x');
+        });
+    }
+    
+    // Close FAB menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!fabMain.contains(e.target) && !fabMenuItems.contains(e.target)) {
+            fabMenuItems.classList.remove('show');
+            fabMain.querySelector('i').classList.add('bi-plus');
+            fabMain.querySelector('i').classList.remove('bi-x');
+        }
+    });
+}
+
+// Touch Gestures and Swipe Detection
+function initTouchGestures() {
+    let startX, startY, endX, endY;
+    const minSwipeDistance = 50;
+    
+    // Touch start
+    document.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    // Touch end
+    document.addEventListener('touchend', function(e) {
+        endX = e.changedTouches[0].clientX;
+        endY = e.changedTouches[0].clientY;
+        
+        const deltaX = endX - startX;
+        const deltaY = endY - startY;
+        
+        // Determine swipe direction
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+            if (deltaX > 0) {
+                handleSwipeRight();
+            } else {
+                handleSwipeLeft();
+            }
+        } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > minSwipeDistance) {
+            if (deltaY > 0) {
+                handleSwipeDown();
+            } else {
+                handleSwipeUp();
+            }
+        }
+    }, { passive: true });
+}
+
+// Swipe handlers
+function handleSwipeRight() {
+    showGestureFeedback('Swiped Right');
+    // Could open navigation menu
+}
+
+function handleSwipeLeft() {
+    showGestureFeedback('Swiped Left');
+    // Could close modals or go back
+}
+
+function handleSwipeUp() {
+    showGestureFeedback('Swiped Up');
+    // Could scroll to top or show quick actions
+}
+
+function handleSwipeDown() {
+    showGestureFeedback('Swiped Down');
+    // Could refresh or show notifications
+}
+
+// Gesture feedback
+function showGestureFeedback(message) {
+    const feedback = document.getElementById('gestureFeedback');
+    if (feedback) {
+        feedback.textContent = message;
+        feedback.classList.add('show');
+        
+        setTimeout(() => {
+            feedback.classList.remove('show');
+        }, 1000);
+    }
+}
+
+// Mobile-specific optimizations
+function initMobileOptimizations() {
+    // Prevent zoom on input focus (iOS)
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            if (window.innerWidth <= 768) {
+                this.style.fontSize = '16px';
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            if (window.innerWidth <= 768) {
+                this.style.fontSize = '';
+            }
+        });
+    });
+    
+    // Optimize scrolling performance
+    if (window.innerWidth <= 768) {
+        document.body.style.webkitOverflowScrolling = 'touch';
+        
+        // Reduce animations on mobile
+        const animatedElements = document.querySelectorAll('.service-card, .testimonial, .card');
+        animatedElements.forEach(el => {
+            el.style.transition = 'none';
+        });
+    }
+    
+    // Handle orientation change
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            // Recalculate positions after orientation change
+            window.scrollTo(0, window.scrollY);
+        }, 100);
+    });
+}
+
+// Mobile-specific loading states
+function showMobileLoading(element) {
+    if (window.innerWidth <= 768) {
+        const originalContent = element.innerHTML;
+        element.innerHTML = '<div class="loading-spinner"></div>';
+        element.disabled = true;
+        
+        return function() {
+            element.innerHTML = originalContent;
+            element.disabled = false;
+        };
+    }
+    return function() {};
+}
+
+// Enhanced touch interactions for cards
+function initTouchInteractions() {
+    const touchElements = document.querySelectorAll('.service-card, .testimonial, .card');
+    
+    touchElements.forEach(element => {
+        let touchStartTime;
+        let touchEndTime;
+        
+        element.addEventListener('touchstart', function(e) {
+            touchStartTime = new Date().getTime();
+            this.style.transform = 'scale(0.98)';
+        }, { passive: true });
+        
+        element.addEventListener('touchend', function(e) {
+            touchEndTime = new Date().getTime();
+            const touchDuration = touchEndTime - touchStartTime;
+            
+            this.style.transform = '';
+            
+            // Long press detection (500ms)
+            if (touchDuration > 500) {
+                handleLongPress(this);
+            }
+        }, { passive: true });
+        
+        element.addEventListener('touchcancel', function(e) {
+            this.style.transform = '';
+        }, { passive: true });
+    });
+}
+
+// Long press handler
+function handleLongPress(element) {
+    // Show context menu or additional options
+    showGestureFeedback('Long press detected');
+    
+    // Example: Show quick actions for the element
+    const rect = element.getBoundingClientRect();
+    showQuickActions(rect.left + rect.width / 2, rect.top);
+}
+
+// Quick actions menu
+function showQuickActions(x, y) {
+    // Create quick actions menu
+    const menu = document.createElement('div');
+    menu.className = 'quick-actions-menu';
+    menu.style.cssText = `
+        position: fixed;
+        left: ${x}px;
+        top: ${y}px;
+        background: var(--gradient-primary);
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: var(--shadow-heavy);
+        z-index: 10000;
+        transform: translate(-50%, -50%);
+    `;
+    
+    menu.innerHTML = `
+        <button class="quick-action-btn" onclick="shareElement()">
+            <i class="bi bi-share"></i> Share
+        </button>
+        <button class="quick-action-btn" onclick="bookmarkElement()">
+            <i class="bi bi-bookmark"></i> Save
+        </button>
+    `;
+    
+    document.body.appendChild(menu);
+    
+    // Remove menu after 3 seconds
+    setTimeout(() => {
+        menu.remove();
+    }, 3000);
+    
+    // Remove menu on click outside
+    document.addEventListener('click', function removeMenu() {
+        menu.remove();
+        document.removeEventListener('click', removeMenu);
+    });
+}
+
+// Quick action handlers
+function shareElement() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Maxman Security',
+            text: 'Check out this security service!',
+            url: window.location.href
+        });
+    } else {
+        showGestureFeedback('Sharing not supported');
+    }
+}
+
+function bookmarkElement() {
+    showGestureFeedback('Saved to bookmarks');
+}
+
+// Mobile-specific CSS for quick actions
+const quickActionsStyle = document.createElement('style');
+quickActionsStyle.textContent = `
+    .quick-actions-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .quick-action-btn {
+        background: none;
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    
+    .quick-action-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .quick-action-btn:active {
+        background: rgba(255, 255, 255, 0.2);
+    }
+`;
+document.head.appendChild(quickActionsStyle);
+
+// Initialize mobile features
+document.addEventListener('DOMContentLoaded', function() {
+    initMobileFabMenu();
+    initTouchGestures();
+    initMobileOptimizations();
+    initTouchInteractions();
+    
+    // Add mobile-specific event listeners
+    if (window.innerWidth <= 768) {
+        // Double tap to zoom prevention
+        let lastTap = 0;
+        document.addEventListener('touchend', function(e) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+        
+        // Prevent pull-to-refresh on critical elements
+        const criticalElements = document.querySelectorAll('.mobile-fab-menu');
+        criticalElements.forEach(el => {
+            el.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
+        });
+    }
+}); 

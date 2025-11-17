@@ -1,3 +1,8 @@
+<?php
+session_start();
+// Check if user is logged in
+$isLoggedIn = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true && isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,75 +15,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Floating Security Alert Button -->
-    <button class="floating-alert-btn" id="openAlertModal" aria-label="Send Emergency Alert" title="Send Emergency Alert - Automatic">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-    </button>
-
-    <!-- Security Alert Modal -->
-    <div class="modal fade" id="securityAlertModal" tabindex="-1" aria-labelledby="securityAlertModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="securityAlertForm" method="POST" action="php/receive_alert.php" novalidate aria-label="Security Alert Form">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="securityAlertModalLabel">
-                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                            Emergency Security Alert
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="alert-form-messages"></div>
-                        <div class="mb-3">
-                            <label for="alertName" class="form-label">Your Name (optional)</label>
-                            <input type="text" class="form-control" id="alertName" name="alertName" placeholder="Enter your name">
-                        </div>
-                        <div class="mb-3">
-                            <label for="alertPhone" class="form-label">Phone Number (optional)</label>
-                            <input type="tel" class="form-control" id="alertPhone" name="alertPhone" placeholder="Enter your phone number">
-                        </div>
-                        <div class="mb-3">
-                            <label for="alertMessage" class="form-label">Describe Your Emergency <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="alertMessage" name="alertMessage" rows="3" required aria-required="true" placeholder="Please describe the emergency situation..."></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Share Location?</label>
-                            <div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="getLocationBtn">
-                                    <i class="bi bi-geo-alt me-1"></i>Share My Location
-                                </button>
-                                <input type="hidden" id="alertLocation" name="alertLocation">
-                                <span id="locationStatus" class="ms-2 small"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-send me-1"></i>Send Alert
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Login Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <form id="loginForm" method="POST" action="php/login.php" novalidate aria-label="Staff Login Form">
+                <form id="loginForm" method="POST" action="php/login.php" novalidate aria-label="Admin Login Form">
                     <div class="modal-header">
                         <h5 class="modal-title" id="loginModalLabel">
-                            <i class="bi bi-person-circle me-2"></i>Staff Login
+                            <i class="bi bi-person-circle me-2"></i>Admin Login
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div id="login-messages"></div>
                         <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required placeholder="Enter your username">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="Enter your email">
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
@@ -99,7 +52,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="index.php" onclick="event.preventDefault(); window.location.reload();">
                 <img src="img/LOGO.png" alt="MAXMAN SECURITY" class="logo">
             </a>
             
@@ -122,35 +75,26 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#testimonials">
-                            <i class="bi bi-chat-quote"></i>
-                            <span>Testimonials</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#faq">
-                            <i class="bi bi-question-circle"></i>
-                            <span>FAQ</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="#contact">
                             <i class="bi bi-envelope"></i>
                             <span>Contact</span>
                         </a>
                     </li>
+                    <?php if (!$isLoggedIn): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal" id="loginNav">
                             <i class="bi bi-person"></i>
-                            <span>Login</span>
+                            <span>Admin Login</span>
                         </a>
                     </li>
-                    <li class="nav-item d-none" id="dashboardNav">
-                        <a class="nav-link" href="dashboard.html">
+                    <?php else: ?>
+                    <li class="nav-item" id="dashboardNav">
+                        <a class="nav-link" href="admin-dashboard.php">
                             <i class="bi bi-speedometer2"></i>
-                            <span>Dashboard</span>
+                            <span>Admin Dashboard</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                     <li class="nav-item">
                         <a class="nav-link btn btn-primary text-white ms-2" href="#" data-bs-toggle="modal" data-bs-target="#requestServiceModal">
                             <i class="bi bi-plus-circle"></i>
@@ -178,79 +122,126 @@
             </div>
             
             <div class="trust-badges">
-                <div class="trust-badge">
+                <div class="trust-badge animate-fade-in-up">
                     <i class="bi bi-shield-lock"></i>
                     <span>500+ Trusted Clients</span>
                 </div>
-                <div class="trust-badge">
+                <div class="trust-badge animate-fade-in-up">
                     <i class="bi bi-award"></i>
                     <span>Certified Guards</span>
                 </div>
-                <div class="trust-badge">
+                <div class="trust-badge animate-fade-in-up">
                     <i class="bi bi-clock"></i>
-                 <span>24/7 Response</span>
+                    <span>24/7 Response</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Services Section -->
-    <section id="services" class="services-section">
+    <section id="services" class="services-section py-5">
         <div class="container">
-            <h2 class="section-title">Our Security Services</h2>
+            <div class="text-center mb-5">
+                <h2 class="section-title">Our Security Services</h2>
+                <p class="lead text-muted">Professional security solutions tailored to your needs</p>
+            </div>
+            
+            <!-- Services Grid -->
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card">
+                    <div class="service-card modern-card">
                         <div class="service-icon">
                             <i class="bi bi-house-door"></i>
                         </div>
-                        <h5>Home Security</h5>
-                        <p>Comprehensive residential protection with 24/7 monitoring, rapid response, and personalized security plans for your family's safety.</p>
+                        <div class="service-content">
+                            <h5>Home Security</h5>
+                            <p>Comprehensive residential protection with 24/7 monitoring, rapid response, and personalized security plans for your family's safety.</p>
+                            <ul class="service-features">
+                                <li>24/7 Monitoring</li>
+                                <li>Rapid Response</li>
+                                <li>Personalized Plans</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card">
+                    <div class="service-card modern-card">
                         <div class="service-icon">
                             <i class="bi bi-building"></i>
                         </div>
-                        <h5>Office Security</h5>
-                        <p>Professional business security solutions including access control, surveillance, and on-site guards to protect your workplace.</p>
+                        <div class="service-content">
+                            <h5>Office Security</h5>
+                            <p>Professional business security solutions including access control, surveillance, and on-site guards to protect your workplace.</p>
+                            <ul class="service-features">
+                                <li>Access Control</li>
+                                <li>Surveillance Systems</li>
+                                <li>On-site Guards</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card">
+                    <div class="service-card modern-card">
                         <div class="service-icon">
                             <i class="bi bi-person-badge"></i>
                         </div>
-                        <h5>Bodyguard Services</h5>
-                        <p>Personal protection for VIPs, executives, and individuals requiring discreet and reliable close security.</p>
+                        <div class="service-content">
+                            <h5>Bodyguard Services</h5>
+                            <p>Personal protection for VIPs, executives, and individuals requiring discreet and reliable close security.</p>
+                            <ul class="service-features">
+                                <li>VIP Protection</li>
+                                <li>Executive Security</li>
+                                <li>Discreet Service</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card">
+                    <div class="service-card modern-card">
                         <div class="service-icon">
                             <i class="bi bi-people"></i>
                         </div>
-                        <h5>Event Security</h5>
-                        <p>Comprehensive event security management ensuring the safety of your guests, staff, and venue during any occasion.</p>
+                        <div class="service-content">
+                            <h5>Event Security</h5>
+                            <p>Comprehensive event security management ensuring the safety of your guests, staff, and venue during any occasion.</p>
+                            <ul class="service-features">
+                                <li>Crowd Control</li>
+                                <li>Guest Safety</li>
+                                <li>Venue Protection</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card">
+                    <div class="service-card modern-card">
                         <div class="service-icon">
                             <i class="bi bi-shield-check"></i>
                         </div>
-                        <h5>Escort Security</h5>
-                        <p>Safe and secure escort services for individuals and valuable assets with trained professionals.</p>
+                        <div class="service-content">
+                            <h5>Escort Security</h5>
+                            <p>Safe and secure escort services for individuals and valuable assets with trained professionals.</p>
+                            <ul class="service-features">
+                                <li>Asset Protection</li>
+                                <li>Safe Transport</li>
+                                <li>Trained Professionals</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card">
+                    <div class="service-card modern-card">
                         <div class="service-icon">
                             <i class="bi bi-person-lock"></i>
                         </div>
-                        <h5>VIP Protection</h5>
-                        <p>High-profile protection services with advanced security protocols and experienced protection teams.</p>
+                        <div class="service-content">
+                            <h5>VIP Protection</h5>
+                            <p>High-profile protection services with advanced security protocols and experienced protection teams.</p>
+                            <ul class="service-features">
+                                <li>Advanced Protocols</li>
+                                <li>Experienced Teams</li>
+                                <li>High-profile Service</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -260,40 +251,86 @@
     <!-- About Us Section -->
     <section id="about" class="py-5 bg-light">
         <div class="container">
-            <div class="row align-items-center">
+            <div class="text-center mb-5">
+                <h2 class="section-title">About Maxman Security</h2>
+                <p class="lead text-muted">Your trusted partner in professional security solutions</p>
+            </div>
+            
+            <div class="row align-items-center mb-5">
                 <div class="col-lg-6">
-                    <h2 class="section-title">About Maxman Security</h2>
-                    <p class="lead mb-4">We are a leading provider of professional security guard services, committed to excellence and innovation in protecting what matters most.</p>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                <span>Certified Guards</span>
+                    <div class="about-content">
+                        <h3 class="mb-4">Excellence in Security Since 2010</h3>
+                        <p class="lead mb-4">Maxman Security is a leading provider of professional security guard services, committed to excellence and innovation in protecting what matters most to our clients. <br> <br> With over a decade of experience in the security industry, we have built a reputation for reliability, professionalism, and cutting-edge security solutions. Our team of certified guards and security experts work around the clock to ensure your safety and peace of mind. </p>
+                    
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div class="feature-item">
+                                    <i class="bi bi-shield-check text-primary me-2"></i>
+                                    <span>Certified Guards</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-item">
+                                    <i class="bi bi-clock text-primary me-2"></i>
+                                    <span>24/7 Availability</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-item">
+                                    <i class="bi bi-lightning text-primary me-2"></i>
+                                    <span>Rapid Response</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="feature-item">
+                                    <i class="bi bi-gear text-primary me-2"></i>
+                                    <span>Custom Solutions</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                <span>24/7 Availability</span>
+                        
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <h4>500+</h4>
+                                <p>Happy Clients</p>
                             </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                <span>Rapid Response</span>
+                            <div class="stat-item">
+                                <h4>100+</h4>
+                                <p>Security Guards</p>
                             </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                <span>Custom Solutions</span>
+                            <div class="stat-item">
+                                <h4>24/7</h4>
+                                <p>Support Available</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-6">
-                    <div class="text-center">
-                        <img src="img/MAXMAN SECURITY REBRAND LOGO2.png" alt="Maxman Security" class="img-fluid" style="max-width: 400px;">
+                    <div class="about-image">
+                        <img src="img/MAXMAN SECURITY REBRAND LOGO2.png" alt="Maxman Security" class="img-fluid security-logo">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mission & Vision -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="mission-card">
+                        <div class="card-icon">
+                            <i class="bi bi-bullseye"></i>
+                        </div>
+                        <h4>Our Mission</h4>
+                        <p>To provide exceptional security services that protect our clients' assets, personnel, and peace of mind through professional, reliable, and innovative security solutions.</p>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="vision-card">
+                        <div class="card-icon">
+                            <i class="bi bi-eye"></i>
+                        </div>
+                        <h4>Our Vision</h4>
+                        <p>To be the leading security company in the region, recognized for our commitment to excellence, innovation, and the highest standards of professional service.</p>
                     </div>
                 </div>
             </div>
@@ -301,53 +338,104 @@
     </section>
 
     <!-- Testimonials Section -->
-    <section id="testimonials" class="py-5">
+    <section id="testimonials" class="py-5 bg-primary text-white">
         <div class="container">
-            <h2 class="section-title text-center">What Our Clients Say</h2>
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="testimonial">
-                                <div class="mb-3">
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
+            <div class="text-center mb-5">
+                <h2 class="section-title text-white">What Our Clients Say</h2>
+                <p class="lead">Trusted by businesses and individuals across the region</p>
+            </div>
+            
+            <!-- Testimonials Carousel -->
+            <div id="testimonialsCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                    <button type="button" data-bs-target="#testimonialsCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                </div>
+                
+                <div class="carousel-inner">
+                    <!-- First Slide -->
+                    <div class="carousel-item active">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="testimonial-slide text-center">
+                                    <div class="stars mb-3">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                    </div>
+                                    <blockquote class="blockquote">
+                                        <p class="mb-4">"Maxman Security provided excellent service. I felt safe and supported throughout the entire process. Their professionalism and quick response made all the difference!"</p>
+                                        <footer class="blockquote-footer">
+                                            <strong>Jane D.</strong>
+                                            <cite title="Source Title">Residential Client</cite>
+                                        </footer>
+                                    </blockquote>
                                 </div>
-                                <p>"Maxman Security responded to my emergency in minutes. I felt safe and supported throughout the entire process!"</p>
-                                <div class="testimonial-author">— Jane D.</div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="testimonial">
-                                <div class="mb-3">
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
+                    </div>
+                    
+                    <!-- Second Slide -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="testimonial-slide text-center">
+                                    <div class="stars mb-3">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                    </div>
+                                    <blockquote class="blockquote">
+                                        <p class="mb-4">"Professional, reliable, and always on time. Highly recommended for any business security needs. Their attention to detail and commitment to excellence is unmatched."</p>
+                                        <footer class="blockquote-footer">
+                                            <strong>Michael B.</strong>
+                                            <cite title="Source Title">Business Owner</cite>
+                                        </footer>
+                                    </blockquote>
                                 </div>
-                                <p>"Professional, reliable, and always on time. Highly recommended for any business security needs."</p>
-                                <div class="testimonial-author">— Michael B.</div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="testimonial">
-                                <div class="mb-3">
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <i class="bi bi-star-fill text-warning"></i>
+                    </div>
+                    
+                    <!-- Third Slide -->
+                    <div class="carousel-item">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="testimonial-slide text-center">
+                                    <div class="stars mb-3">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                    </div>
+                                    <blockquote class="blockquote">
+                                        <p class="mb-4">"Fast response time and excellent communication. They handled our event security flawlessly. The team's expertise and dedication made our event a complete success!"</p>
+                                        <footer class="blockquote-footer">
+                                            <strong>David R.</strong>
+                                            <cite title="Source Title">Event Organizer</cite>
+                                        </footer>
+                                    </blockquote>
                                 </div>
-                                <p>"The emergency alert feature is a lifesaver. Thank you for keeping my family safe and secure!"</p>
-                                <div class="testimonial-author">— Sarah K.</div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Carousel Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#testimonialsCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
             </div>
         </div>
     </section>
@@ -362,11 +450,11 @@
                         <div class="accordion-item faq-item">
                             <h2 class="accordion-header" id="faq1-heading">
                                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
-                                    How quickly can you respond to an emergency?
+                                    How quickly can you respond to service requests?
                                 </button>
                             </h2>
                             <div id="faq1" class="accordion-collapse collapse show" aria-labelledby="faq1-heading" data-bs-parent="#faqAccordion">
-                                <div class="accordion-body">We offer 24/7 rapid response with an average response time of 5-10 minutes. Our team is always ready and equipped to handle emergencies immediately.</div>
+                                <div class="accordion-body">We offer 24/7 rapid response with an average response time of 5-10 minutes. Our team is always ready and equipped to handle your security needs immediately.</div>
                             </div>
                         </div>
                         <div class="accordion-item faq-item">
@@ -415,11 +503,11 @@
                                         </li>
                                         <li class="mb-2">
                                             <i class="bi bi-telephone me-2"></i>
-                                            <strong>Phone:</strong> +1 234 567 8900
+                                            <strong>Phone:</strong> +260 977 716 166
                                         </li>
                                         <li class="mb-2">
                                             <i class="bi bi-geo-alt me-2"></i>
-                                            <strong>Address:</strong> 123 Security Lane, City, Country
+                                            <strong>Address:</strong> 123 Security Street, Kitwe Zambia
                                         </li>
                                     </ul>
                                 </div>
@@ -433,7 +521,7 @@
                                     </h5>
                                     <ul class="list-unstyled">
                                         <li class="mb-2">
-                                            <strong>Emergency:</strong> 24/7 Available
+                                            <strong>Service:</strong> 24/7 Available
                                         </li>
                                         <li class="mb-2">
                                             <strong>Office:</strong> Mon-Fri 8AM-6PM
@@ -563,9 +651,28 @@
         </div>
     </div>
 
+    <!-- Mobile Floating Action Menu -->
+    <div class="mobile-fab-menu">
+        <button class="fab-button" id="fabMain" aria-label="Quick Actions">
+            <i class="bi bi-plus"></i>
+        </button>
+        <div class="fab-menu-items" id="fabMenuItems">
+            <button class="fab-menu-item" id="fabService" aria-label="Request Service">
+                <i class="bi bi-shield-plus"></i>
+            </button>
+            <button class="fab-menu-item" id="fabContact" aria-label="Contact Us">
+                <i class="bi bi-telephone"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Gesture Feedback -->
+    <div class="gesture-feedback" id="gestureFeedback"></div>
+
     <!-- Scripts -->
     <script src="js/jquery.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/main.js"></script>
 </body>
-</html> 
+</html>
+
